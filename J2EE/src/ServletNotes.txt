@@ -1,0 +1,128 @@
+Servlets:
+===========================================================================
+Serverside Java classes. They are capable of reading data from browser.
+
+
+Servlet class contains Servlet container.
+
+We can send data using "HTTP" protocol to send data from request. Data sent from header is called "Query String" and through body it is called "Payload".
+
+Servlet container will accept and read http protocol data. Once data received, data will get converted into JavaBeans (HTTPServletRequest object). Later it will be forwarded to Servelet classes by Servlet container.
+
+Response will be created as HTTPServletResponse and then converted to HTTP protocol.
+
+To receive data from browser, either Servlet/ JSP or Filters to be used in Server.
+
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+How would it (Servlet Container) know which Servlet class need to receive data from HTTP request considering Servlet container having multiple applications and each application having multiple servlet classes? 
+Also application to be receiving response is MyApp and it has 4 Servlet classes (A Servlet class, B Servlet class, C Servlet class, D Servlet class, Hello.html).
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+http://<server_ip_address or server_ip_host_name>:8080/MyApp/Hello.html
+
+upon submission, request should go to which servlet class. So for each servlet we have an address like
+for A Servlet ==> /a
+for B Servlet ==> /b
+for C Servlet ==> /c
+for D Servlet ==> /d
+
+
+
+URL for reaching A Servlet:
+==============================================
+http://<server_ip_address or server_ip_host_name>:8080/MyApp/a
+
+
+<form action="http://<server_ip_address or server_ip_host_name>:8080/MyApp/a">
+	Name : <input type="text" name="p1"/>
+	<input type="Submit" value="Submit"/>
+</form>
+
+
+By default method is "GET", so data will be passed as Query String like below (provided Sandy in above input text box) :
+http://<server_ip_address or server_ip_host_name>:8080/MyApp/a?p1=Sandy
+
+To execute Servlet class, we need to create an object. So, Servlet container will create an object to execute the Servlet class. On first request the object will be created based on address. All these servlet objects are Singleton classes.
+After creating the object, Servlet object will send data using methods. This is done by servlet container.
+
+Responsibilities of Servlet Container:
+1.) Read http data and convert into HTTPServletRequest.
+2.) Later based on request, it has to create an Servlet object (Singleton class, one object for address).
+3.) Send data to servlet.
+4.) Response will be converted into HTTP protocol.
+5.) Same data will be passed to browser.
+
+
+
+For Servlet Container, directory structure is mandatory:
+
+Application Folder
+|
+|---------------- View resources (HTML pages, JSP pages, Images, Audio files, Video files, CSS files, JS files) ==> files used for designing UI.
+|
+|------------- WEB-INF
+|                |
+|                |------- classes (Servlet .class files and Controller classes and Model classes as well but not EJB class)
+|                |------- lib (Additional API files. like Commons-fileupload.jar, Servlet-api.jar)
+|                |------- Web.xml file (Contains mapping from UI to servlet classes)
+|                |
+
+In normal Java program, we have to configure our jar files in the class path. But in Servlet programming, we have to copy it to lib folder and during runtime, it will be added to classpath.
+
+
+When we call Start on Servlet Container, it will read all the applications Web.xml files from application folder. 
+While reading the Web.xml files, if any servlet is not found ClassNotFoundException will be thrown.
+
+There are various configurations in Web.xml. If there are any Servlet (important Servlet) configured as loadOnStartup as 0/ 1, then it will create an object during Servlet starting.
+
+From Servlet3 api onwards, we have annotation support. Web.xml file is also called Deployment descriptor file.
+
+
+How to Write a Servlet class?
+=========================================================
+
+1.)		Servlet (Interface).
+2.)		Generic Servlet (Abstract class).
+3.)		HTTPServlet (Abstract class).
+
+
+
+1.)		Servlet (Interface):
+=========================================================
+We need to implement 5 methods:
+	1.) init() : void
+	2.) service(ServletRequest, ServletResponse) : void
+	3.) destroy() : void
+	4.) getServletInfo() : String
+	5.) getServletConfig() : ServletConfig
+	
+
+2.)		Generic Servlet (Abstract class which is implementation class for Servlet interface).
+=========================================================
+We need to implement 1 method. Other 4 methods are having default implementation and they are:
+	1.) init() : void
+	2.) destroy() : void
+	3.) getServletInfo() : String
+	4.) getServletConfig() : ServletConfig
+
+We need to implement one abstract method which is:
+	1.) service(ServletRequest, ServletResponse) : void
+	
+3.)		HTTPServlet (Abstract class and having no abstract methods to override. It's a child class of Generic Servlet abstract class).
+=========================================================
+We need not to implement any method. All the methods are concrete methods. Recommended methods to be overridden are:
+	1.) doGet(HttpServletRequest, HttpServletResponse)
+		Or
+	2.) doPost(HttpServletRequest, HttpServletResponse)
+
+
+
+
+
+
+
+When Servlet Container receives request, it stores address along with parameters to send response back.
+
+

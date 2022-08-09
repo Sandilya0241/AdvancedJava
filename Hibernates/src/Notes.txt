@@ -1,0 +1,145 @@
+Entity class is plain old Java class that is mapped to a Database table with help of some annotations.
+
+There are two ways of mapping a Java class to Database object:
+	XML configuration (Legacy way).
+	Java Annotation (Modern way).
+
+JUST A HEADS UP - FOR JAVA 9, 10 and 11 USERS
+
+If you are using Java 9, 10 or 11, then you will encounter an error when you run your Hibernate program.
+
+These are the steps to resolve it. Come back to the lecture if you hit the error.
+
+----
+
+Error: Exception in thread "main" java.lang.NoClassDefFoundError: javax/xml/bind/JAXBException
+
+
+This happens because of Java 9 and higher. 
+
+Java 9 and higher has removed java.xml.bind from its default classpath. That's why we get the class not found exception.  We have to explicitly add JAR files to the build path.
+
+---
+
+Solution
+
+For Java 9 and higher, you need to additional JAR files.
+
+You need to download the following JAR files:
+
+javax.activation-1.2.0.jar
+jaxb-api-2.3.0.jar
+jaxb-core-2.3.0.jar
+jaxb-impl-2.3.0.jar
+
+---
+
+1. Download the files using links below:
+
+javax.activation-1.2.0.jar
+
+jaxb-api-2.3.0.jar
+
+jaxb-core-2.3.0.jar
+
+jaxb-impl-2.3.0.jar
+
+---
+
+2. Copy the JAR files to the lib folder of your project
+
+javax.activation-1.2.0.jar
+jaxb-api-2.3.0.jar
+jaxb-core-2.3.0.jar
+jaxb-impl-2.3.0.jar
+
+
+Two key players in Hibernates are:
+	SessionFactory:
+		1.)	Reads the hibernate config file.
+		2.) Creates Session objects.
+		3.) It's a heavy-weighted object.
+		4.) Only created once in our application.
+		
+	Session:
+		1.)	Wraps a JDBC connection.
+		2.) Main objective is used to save/ retrieve objects.
+		3.)	Short-lived object.
+		4.) Retrieved from SessionFactory.	
+		
+
+		
+ID Generation Strategies:
+=======================================================
+GenerationType.AUTO:
+	Pick an appropriate strategy for the particular database.
+GenerationType.IDENTITY:
+	Assign primary keys using database identity column.
+GenerationType.SEQUENCE:
+	Assign primary keys using database sequence.
+GenerationType.TABLE:
+	Assign primary keys using an underlying database table to ensure uniqueness.
+	
+
+
+
+
+Entity Life Cycle:
+=============================================================================================
+Operation              | Description                                                         | 
+=======================+=====================================================================|
+Detach                 | If entity is detached, it is not associated with a hibernate session|
+-----------------------+---------------------------------------------------------------------|
+Merge                  | If instance is detached from session, then merge will reattach to   |
+					   | session                                                             |
+-----------------------+---------------------------------------------------------------------|
+Persist                | Transitions new instances to managed state. Next flush/ commit will |
+                       | save in DB                                                          | 
+-----------------------+---------------------------------------------------------------------|
+Remove                 | Transitions managed entity to be removed. Next flush/ commit will   |
+                       | delete from DB                                                      |
+-----------------------+---------------------------------------------------------------------|
+Refresh                | Reload/ Synch object with data from DB. Prevents stale data.        |
+---------------------------------------------------------------------------------------------+
+
+
+
+
+					 ______________________
+		   			|                      |
+		   			| 	New/ Transient     |<-----------------------------------+
+		   			|______________________|                                    |
+		          			|        A                                          | commit
+			  save/ persist |        | rollback/ new                            |
+		    		  ______V________|___________      delete/ remove    _______|_______
+		   	+--------|                           |--------------------->|               |
+	refresh	|		 | 	Persistent/ Managed      |                      | Removed       |
+		   	+------->|___________________________|<---------------------|_______________|
+		                   |           A            persist/ rollback           |
+	     		           |           |                                        |
+    commit/ rollback/ close|           | merge                                  | rollback
+		    		  _____V___________|____                                    |
+		   			 |                      |                                   |
+		   			 | 	Detached            |<----------------------------------+
+		   			 |______________________|
+		   
+
+
+Cascase Type:
+=============================================================================================
+Operation              | Description                                                         | 
+=======================+=====================================================================|
+Persist                | If entity is persisted/ saved, related entity will also be persisted|
+-----------------------+---------------------------------------------------------------------|
+Remove                 | If entity is removed/ deleted, related entity will also be deleted  |
+-----------------------+---------------------------------------------------------------------|
+Refresh                | If entity is refreshed, related entity will also be refreshed       | 
+-----------------------+---------------------------------------------------------------------|
+Detach                 | If entity is detached (not associated w/ session),                  |
+                       | then related entity will also be refreshed                          |
+-----------------------+---------------------------------------------------------------------|
+Merge                  | If entity is merged, related entity will also be merged             |
+-----------------------+---------------------------------------------------------------------|
+All                    | All the above cascade types.                                        |
+---------------------------------------------------------------------------------------------+
+

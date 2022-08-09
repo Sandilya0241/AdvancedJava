@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Ajax Test</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+	$(function(){
+		$('#ID_SUBMIT').click(
+			function(event){
+				var name = $('#ID_TXT_NAME').val();
+				var email = $('#ID_TXT_EMAIL').val();
+				var address = $('#ID_TXT_ADDR').val();
+				$.ajax({
+					type:"GET",
+					url:"RegServ",
+					data:"name=" + name + "&email=" + email + "&address=" + address,
+					success: function(msg){
+						alert('Message from servlet :' + msg);
+					},
+					error: function(e){
+						alert(e);
+					}
+				});
+			}
+		);	
+	});
+</script>
+</head>
+<body>
+	<form id="RegistrationForm">
+		<pre>
+		Name	:	<input type="text" name="TXT_NAME" id="ID_TXT_NAME">
+		Email	:	<input type="text" name="TXT_EMAIL" id="ID_TXT_EMAIL">
+		Address	:	<textarea rows="5" cols="15" name="TXT_ADDR" id="ID_TXT_ADDR"></textarea>
+				<input type="submit" value="Submit" id="ID_SUBMIT">
+		</pre>
+	</form>
+</body>
+</html>

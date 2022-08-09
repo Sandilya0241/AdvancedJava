@@ -1,0 +1,1394 @@
+Servlets:
+===========================================================================
+Serverside Java classes. They are capable of reading data from browser.
+
+
+Servlet class contains Servlet container.
+
+We can send data using "HTTP" protocol to send data from request. Data sent from header is called "Query String" and through body it is called "Payload".
+
+Servlet container will accept and read http protocol data. Once data received, data will get converted into JavaBeans (HTTPServletRequest object). Later it will be forwarded to Servelet classes by Servlet container.
+
+Response will be created as HTTPServletResponse and then converted to HTTP protocol.
+
+To receive data from browser, either Servlet/ JSP or Filters to be used in Server.
+
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+How would it (Servlet Container) know which Servlet class need to receive data from HTTP request considering Servlet container having multiple applications and each application having multiple servlet classes? 
+Also application to be receiving response is MyApp and it has 4 Servlet classes (A Servlet class, B Servlet class, C Servlet class, D Servlet class, Hello.html).
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+http://<server_ip_address or server_ip_host_name>:8080/MyApp/Hello.html
+
+upon submission, request should go to which servlet class. So for each servlet we have an address like
+for A Servlet ==> /a
+for B Servlet ==> /b
+for C Servlet ==> /c
+for D Servlet ==> /d
+
+
+
+URL for reaching A Servlet:
+==============================================
+http://<server_ip_address or server_ip_host_name>:8080/MyApp/a
+
+
+<form action="http://<server_ip_address or server_ip_host_name>:8080/MyApp/a">
+	Name : <input type="text" name="p1"/>
+	<input type="Submit" value="Submit"/>
+</form>
+
+
+By default method is "GET", so data will be passed as Query String like below (provided Sandy in above input text box) :
+http://<server_ip_address or server_ip_host_name>:8080/MyApp/a?p1=Sandy
+
+To execute Servlet class, we need to create an object. So, Servlet container will create an object to execute the Servlet class. On first request the object will be created based on address. All these servlet objects are Singleton classes.
+After creating the object, Servlet object will send data using methods. This is done by servlet container.
+
+Responsibilities of Servlet Container:
+1.) Read http data and convert into HTTPServletRequest.
+2.) Later based on request, it has to create an Servlet object (Singleton class, one object for address).
+3.) Send data to servlet.
+4.) Response will be converted into HTTP protocol.
+5.) Same data will be passed to browser.
+
+
+
+For Servlet Container, directory structure is mandatory:
+
+Application Folder
+|
+|---------------- View resources (HTML pages, JSP pages, Images, Audio files, Video files, CSS files, JS files) ==> files used for designing UI.
+|
+|------------- WEB-INF
+|                |
+|                |------- classes (Servlet .class files and Controller classes and Model classes as well but not EJB class)
+|                |------- lib (Additional API files. like Commons-fileupload.jar, Servlet-api.jar)
+|                |------- Web.xml file (Contains mapping from UI to servlet classes)
+|                |
+
+In normal Java program, we have to configure our jar files in the class path. But in Servlet programming, we have to copy it to lib folder and during runtime, it will be added to classpath.
+
+
+When we call Start on Servlet Container, it will read all the applications Web.xml files from application folder. 
+While reading the Web.xml files, if any servlet is not found ClassNotFoundException will be thrown.
+
+There are various configurations in Web.xml. If there are any Servlet (important Servlet) configured as loadOnStartup as 0/ 1, then it will create an object during Servlet starting.
+
+From Servlet3 api onwards, we have annotation support. Web.xml file is also called Deployment descriptor file.
+
+
+How to Write a Servlet class?
+=========================================================
+
+1.)		Servlet (Interface).
+2.)		Generic Servlet (Abstract class).
+3.)		HTTPServlet (Abstract class).
+
+
+
+1.)		Servlet (Interface):
+=========================================================
+We need to implement 5 methods:
+	1.) init() : void
+	2.) service(ServletRequest, ServletResponse) : void
+	3.) destroy() : void
+	4.) getServletInfo() : String
+	5.) getServletConfig() : ServletConfig
+	
+
+2.)		Generic Servlet (Abstract class which is implementation class for Servlet interface).
+=========================================================
+We need to implement 1 method. Other 4 methods are having default implementation and they are:
+	1.) init() : void
+	2.) destroy() : void
+	3.) getServletInfo() : String
+	4.) getServletConfig() : ServletConfig
+
+We need to implement one abstract method which is:
+	1.) service(ServletRequest, ServletResponse) : void
+	
+3.)		HTTPServlet (Abstract class and having no abstract methods to override. It's a child class of Generic Servlet abstract class).
+=========================================================
+We need not to implement any method. All the methods are concrete methods. Recommended methods to be overridden are:
+	1.) doGet(HttpServletRequest, HttpServletResponse)
+		Or
+	2.) doPost(HttpServletRequest, HttpServletResponse)
+
+
+
+
+
+
+
+When Servlet Container receives request, it stores address along with parameters to send response back.
+
+
+====================================================================================================================================================================================================================================================
+====================================================================================================================================================================================================================================================
+
+Servlet Life Cycle
+====================================================================================================================================================================================================================================================
+====================================================================================================================================================================================================================================================
+
+When servlet container is started, it will extract all the war files and store applications into webapp folder. War cannot be executed directly. Application will be extracted from WAR and will be deployed. 
+A web container can have as many as applications it can.
+
+Servlet class object can be created in two ways. If loadOn is set to Servlet class, it will create an object during Container initialization time. Else it will create an object on user's first request.
+
+Before creating Servlet classes two more objects will be created:
+	I.	ServletContext.
+	II.	ServletConfig.
+
+For an application, one ServletConfig object and ServletContext objects equal to number of Servlet classes are maintained by ServletContainer after reading web.xml file.
+
+I.	ServletContext:
+	To make some data/ objects public for all the servlets inside an application, then we should made available under ServletContext. This is created by ServletContainer.
+	ServletContext is a public area where available within application.
+	Each and every Servlet data can  share and modify that data.
+
+II. ServletConfig:
+	If we need to have data restricted to Servletlevel (only make it available for that particular servlet), we have ServletConfig object. It is also created by ServletContainer.
+	
+	
+Q.)	Where and how does the ServletContext and ServletConfig details are configured?
+A.)	In web.xml.
+	Configuration of ServletConfig (init-param, available for each servlet and private to servlet class):
+	Configuration of ServletContext (context-param, available for all servlet (application level) and public to all servlet class):
+		<web-app>
+			<servlet>
+				<servlet-name>AS</servlet-name>
+				<servlet-class>AServlet</servlet-class>
+				<init-param>
+					<param-name>A</param-name>
+					<param-value>aabbcc</param-value>
+				</init-param>
+			</servlet>
+			<servlet>
+				<servlet-name>BS</servlet-name>
+				<servlet-class>BServlet</servlet-class>
+				<init-param>
+					<param-name>B</param-name>
+					<param-value>ddeeff</param-value>
+				</init-param>
+			</servlet>
+			
+			<context-param>
+				<param-name>ABCNAME</param-name>
+				<param-value>ABCVALUE</param-value>
+			</context-param>
+		</web-app>
+
+		
+Note: 
+if loadOn start is not set for a specified servlet, servletcontainer would create object during user's first request. Object is singleton.
+If loadOn start is set for a specified servlet, servletcontainer would create object during starting servletcontainer.
+
+All servlet implementations should be as "public", else it will not be useful.
+
+Methods of servlet:
+
+public void init(ServletConfig config) {
+	String a = config.getInitParam("A");	// aabbcc
+}
+
+// user task will be performed
+/*
+
+input html form 
+Name:<input type="text" name="p1"><br>
+Address:<input type="text" name="p2"><br>
+Email:<input type="text" name="p3"><br>
+
+
+*/
+public void service(ServletRequest req, ServletResponse resp) throws ServletException, IOException {
+	String name = req.getParameter("p1");
+	String address = req.getParameter("p2");
+	String email = req.getParameter("p3");
+	//Do operation required like JDBC insertion and send output using PrintWriter
+}
+
+
+Note:
+Init method will be executed by ServletContainer one time and it happens on first request.
+Service method will be executed for each users request once (Executes as many times users fire this request.).
+Destroy - Cleanup operations. Any resources allocated during init methods, can be cleaned up in this methods.
+			This would be called when we issue ServletContainer shutdown operation.
+			Once stopped, JVM will remove objects like Servlet Objects, ServletContext, ServletConfig objects from Heap memory.
+			
+			
+
+
+
+By extending Generic Servlet AC, we have to implement service() method. And by using this method, session management is not possible. 
+But by extending HttpServlet AC, we need to implement any class but recommended to implement doGet() and doPost() methods. Also this way has session management capability.
+
+
+
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+HTTP SERVLETS
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+If registration form is span across three forms, then three servlets are to be maintained. Because for three forms we cannot implement using Generic Servlet. 
+Because using extending GenericServlet, it cannot have session management, which is not able to store multiple form data.
+
+
+             
+form1:
+FName, LName, MName
+
+form2:
+Qualification, Percentage
+
+form3:
+Contact, Street, State
+
+
+When we are using HttpServlet,
+
+form1 data (FName, LName, MName) 		-----+---> stored to Session object
+                                             |
+form2 data (Qualification, Percentage) 	-----+
+                                             | 
+form3 data (Contact, Street, State) 	-----+
+
+For each browser from start till close, it will maintain unique session ID.
+
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+How and where seesions are maintained and how is solves above generic servlet problem?
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+Sessions are stored in server and HttpServlet has this capability of maintaining sessions. Per browser we have a session ID generated. We can have different session object settings. 
+SessionObjects can be cleared on close or browser or store for sometime. But data submitted multiple forms in a browser can be identified related to one particular servlet using sessions.
+
+ServletContext object = 1 / Application
+ServletConfig object = 1 / Servlet
+HttpSession object = 1 / Browser
+
+
+
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+Servlet-Servlet communication
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+Servlet classes to Servlet classes communication cannot be done normally by creating an object of class. 
+But in case of Servlets, we cannot create objects directly of class we want to interact with.
+Object creation capability is available to Servlet Container. So, Servlet created object should be used.
+
+Servlet-Servlet communication can happen in three ways:
+1.) By using getServlet("<Servlet Name>");
+2.) By using RequestDispatcher;
+3.) By Using SendRequest();
+
+1.) By using getServlet("<Servlet Name>"): (not recommended)
+
+MyServlet ms = config.getServletContext().getServlet("MyServlet");
+ms.doGet();
+
+2.) By using RequestDispatcher;
+
+RequestDispatcher rd = req.getRequestDispatcher("MyServlet");
+rd.forward(req, resp); ==> will forward the call to next Servlet (MyServlet as per example)
+rd.include(req, resp); ==> Will forward and get data after above call from called Servlet. Both current Servlet and Called Servlet response can be sent to screen for display.
+
+
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+AJAX-Servlet
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+AJAX calls can be used when form is fetching data which in large in size, then without loading data again and again, we can update controls on page.
+
+
+
+
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+Filters
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+Filters are used to filter data being passed to Servlet. They can be used in two ways:
+1.) To filter/ validate data sent to View layer to Controller layer.
+2.) To render output data to be sent to View layer either from Filters itself (in case of errors) or Controller layer (information messages).
+
+Filters are having three methods:
+	1.)	init()
+	2.)	doFilter(request, response, filterChain)
+	3.) destroy()
+	
+
+
+public void doFilter(request, response, filterchain){
+	//Code executed before Servlet call
+	
+	fc.doFilter(request, response);
+	
+	//Code executed after Servlet call
+}
+
+Above code will not receive response back when we user RequestDispatcher.forward() (Servlet-Servlet call). But in case of RequestDispatcher.include(), we would receive response back to filter.
+
+Filter method will create object during starting application (default onload startup).
+
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+Listeners
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+Listeners are services startup before ServletContainer/ Request/ Sessions. Listeners are event handlers that get started first for sessions/ ServletContainer/ Requests.
+There are three types of Listeners:
+	1.)	ServletContextListner
+			==>	This listener will create an object when we start container.
+			==>	This can be used when some settings are to be applied at application level before application start, we can implement above interface.
+			==>	It has two methods:
+				==>	contextInitialized() ==> On Context Startup ==> When we start on Container
+				==>	contextDestroyed() ==> On Context Stop ==> When we stop on Container
+	2.)	ServletSessionListener
+			==>	Upon session creation this object will be created for a browser and user.
+			==> If we have to set particular config settings for user upon session creation, we can use init() method.
+			==> On inValidate() method, this object destroys.
+			==> How many ever requests user fires, there will be single session object created for session duration time/ till closing the browser.
+			==> It has two methods:
+				==>	sessionCreated() ==> On session creation
+				==>	sessionDestroyed() ==> On calling session's inValidate() method
+	3.) RequestListener
+			==> For each request that we make to server, an object is created. It could be data request, posting some data to server or simple application access.
+			==>	Once user requests data and after receiving response, RequestListener object will be deleted.
+			==> It has two methods:
+				requestInitialized()  
+				requestDestroyed()  
+				
+				
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+
+JSP ==> Java Server Pages.
+========================================================================================================================================================================================================================================================
+========================================================================================================================================================================================================================================================
+				
+To create dynamic web pages, we use Java script and on server side we use JSP.
+JSP execute on server but not on browser.
+
+Note: JSP is server side execution technology.
+
+For running JSP, we require special container similar to Servlet container inside JSP engines.
+Web server/ Application server we are using would provide JSP engines.
+
+
+Inside Servlet code, we can write Java code and inside PrinteWriter, we can write HTML code. Similarly inside jsp, we can write HTML and JAVA code inside JSP pages
+
+.jsp
+  |
+  |
+ (1) ==> Load into JSP Container 
+  |
+  V
+JSP Container
+  |
+  |
+ (2)
+  |
+  |
+  V
+Convert JSP code
+into Servlet class
+  |
+  |
+ (3)
+  |
+  |
+  V
+Compile java
+code into byte code.
+
+========================================================================================================================================================================================================================================================
+
+Elements in JSP
+========================================================================================================================================================================================================================================================
+
+The Scriptlet:
+------------------------------
+	>>>	The scriptlet can contain any number of JAVA language statements, variable declarations or expressions that are valid in page scripting language.
+_________________________
+                         |
+<% code fragment %>      |
+_________________________|
+
+	Or
+_________________________
+                         |
+<jsp:scriptlet>          |
+	Code fragment        |
+</jsp:scriptlet>         |
+_________________________|
+
+Ex:
+	<%
+		out.println("First JSP logicc")
+	%>
+
+	
+JSP expressions:
+------------------------------
+	>>>	A JSP expression element contains a scripting language expression that is evaluated, converted to a string and inserted into JSP file where this string appears.
+	>>>	This code placed within JSP expression tag is written to the "Output Stream" of the response. So we need not write out.print() to write data.
+	>>>	This is mainly used to print values of methods and variables.
+	>>>	The expression can contain any expression that is valid as per JAVA language specification without semicolon.
+
+___________________________
+                           |
+<%= JSP Expression %>      |
+___________________________|
+
+	Or
+__________________________
+                          |
+<jsp:expression>          |
+	JSP Expression        |
+</jsp:expression>         |
+__________________________|
+
+Ex:
+
+	<%=
+		(new java.util.Date()).toLocaleString()
+	%>
+
+JSP declarations:
+------------------------------
+	>>>	A declaration declares one or more variables/ methods that you can use in JAVA code later in the JSP file. Variables/ Methods that are used in JSP file are to be declared before use.
+
+_________________________________________
+                                         |
+<%! declaration; declaration;... %>      |
+_________________________________________|
+
+	Or
+________________________________________
+                                        |
+<jsp:declaration>                       |
+	declaration; declaration;...        |
+</jsp:declaration>                      |
+________________________________________|
+
+
+Ex:
+	<%!
+		int i = 0;
+	%>
+	
+	<%!
+		int a, b, c;
+	%>
+	
+	<%!
+		Circle c = new Circle(2.0);
+	%>
+________________________________________________________________________________________________________________
+                                                       |                                                        |
+JSP Scriptlet Tag                                      | JSP Declaration Tag                                    |
+-------------------------------------------------------+--------------------------------------------------------|
+The jsp scriptlet tag only declare variable but not    | The jsp scriptlet tag only declare variable as well as |
+methods                                                | methods                                                |                
+-------------------------------------------------------+--------------------------------------------------------|
+The declaration of scriptlet tag is placed inside the  | The declaration of scriptlet tag is placed outside the |
+_jspService() method.                                  | _jspService() method.                                  |
+_______________________________________________________|________________________________________________________|
+
+JSP Comments:
+------------------------------
+A JSP comment marks text or statements that the JSP container should ignore.
+
+
+______________________________
+                              |
+<%-- JSP comments   --%>      |
+______________________________|
+
+
+There are 9 jsp implicit objects which are created by web container and will be available to all JSP pages. Below are those 9 elements:
+
+____________________________________________
+                   |                        |
+Object             | Type                   |
+-------------------+------------------------|
+out                | JspWriter              |
+-------------------+------------------------|
+request            | HttpServletRequest     |
+-------------------+------------------------|
+response           | HttpServletResponse    |
+-------------------+------------------------|
+config             | ServletConfig          |
+-------------------+------------------------|
+application        | ServletContext         |
+-------------------+------------------------|
+session            | HttpSession            |
+-------------------+------------------------|
+pageContext        | PageContext            |
+-------------------+------------------------|
+exception          | Throwable              |
+___________________|________________________|
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+I.				JSP out implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+	>>>	For writing any data to buffer, JSP provides an implicit object named out. It is the object of JspWriter.
+
+Servlet code:
+------------------
+PrintWriter out = Response.getWriter();
+
+JSP code:
+------------------
+<html>
+<body>
+	<% out.println("Today's date is " + java.util.Calender.getInstance().getTime()) %>
+</body>
+</html>
+
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+II.				JSP Request implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+	>>>	JSP request is an implicit object of type HttpServletRequest i.e., created for each JSP request by the web container. 
+	>>>	It can be used to get request information like below:
+		1.	parameter
+		2.	header information.
+		3.	remote address.
+		4. 	server name.
+		5.	server port.
+		6.	content type.
+		7. Character encoding etc.
+	It can also be used to set, get and remove attributes from the jsp request scope.
+
+Ex:
+	index.html:
+	--------------
+		<html>
+		<body>
+			<form action="welcome.jsp">
+				<input type="text" name="uname"/>
+				<input type="submit" value="Go Submit">
+			</form>
+		</body>
+		</html>
+		
+	welcome.jsp
+	----------------
+	<%
+		String name = request.getParameter("uname");
+		out.println("Welcome " + name);
+	%>
+	
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+III.			JSP Response implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+	>>>	In JSP, response is an implicit object of type HttpServletResponse. The instance(object) for HttpServletResponse is created by web container for every jsp request.
+	>>>	It can be used to add or manipulate response such as redirect response to another resource or send error et cetera.
+
+
+Ex:
+	index.html
+	==============
+		<html>
+		<body>
+			<form action="google.jsp">
+				<input type="text" name="uname"/>
+				<input type="submit" value="Go Submit">
+			</form>
+		</body>
+		</html>
+	
+	google.jsp:
+	==============
+	<%
+		reponse.sendRedirect("http://www.google.com");
+	%>
+	
+	
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+IV.				JSP config implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+	>>>	In JSP, config is an implicit object of type ServletConfig.
+	>>> This object can be used to get initialization parameter for a particular JSP page.
+	>>>	The config object is created by the web container for each JSP page. 
+	>>>	Generally, it is used to get initialization parameters from the web.xml file.
+	
+Ex:
+	index.html:
+	==============
+		<html>
+		<body>
+			<form action="welcome">
+				<input type="text" name="uname"/>
+				<input type="submit" value="Go Submit">
+			</form>
+		</body>
+		</html>
+	
+	webapp.xml
+	===============
+	<web-app>
+		<servlet>
+			<servlet-name>Wel</servlet-name>
+			<jsp-file>/welcome.jsp</jsp-file>
+			<init-param>
+				<param-name>driver</param-name>
+				<param-value>oracle.jdbc.OracleDriver</param-value>
+			</init-param>
+		</servlet>
+		<servlet-mapping>
+			<servlet-name>Wel</servlet-name>
+			<url-pattern>/welcome</url-pattern>
+		</servlet-mapping>
+	</web-app>
+	
+	welcome.jsp:
+	=================
+	<%
+		out.print("Welcome " + request.getParameter("uname"));
+		String driver = config.getInitParameter("driver");
+		out.print("driver name is : " + driver);	
+	%>
+	
+	
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+V.				JSP application implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+	>>>	In JSP, application is an implicit object of type ServletContext.
+	>>>	The instance of ServletContext is created only once by the web container when application or project is deployed on the server.
+	>>>	This object can be used to get initialization parameter from configuration or deployment descriptor file (web.xml).
+	>>>	It can also be used to get, set or remove attribute from the application scope.
+	>>>	This initialization parameters can be used by all JSP pages.
+	
+Ex:
+	index.html:
+	==============
+		<html>
+		<body>
+			<form action="welcome">
+				<input type="text" name="uname"/>
+				<input type="submit" value="Go Submit">
+			</form>
+		</body>
+		</html>
+	
+	webapp.xml
+	===============
+	<web-app>
+		<servlet>
+			<servlet-name>Wel</servlet-name>
+			<jsp-file>/welcome.jsp</jsp-file>
+		</servlet>
+		<servlet-mapping>
+			<servlet-name>Wel</servlet-name>
+			<url-pattern>/welcome</url-pattern>
+		</servlet-mapping>
+		<context-param>
+			<param-name>driver</param-name>
+			<param-value>oracle.jdbc.OracleDriver</param-value>
+		</context-param>
+	</web-app>
+	
+	welcome.jsp:
+	=================
+	<%
+		out.print("Welcome " + request.getParameter("uname"));
+		String driver = application.getInitParameter("driver");
+		out.print("driver name is : " + driver);	
+	%>
+	
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+VI.				session implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+	>>>	In JSP, session is an implicit object of type HttpSession.
+	>>>	We can use this object to get, set or remove attributes or to get session information.
+	
+Ex:
+	index.html:
+	==============
+		<html>
+		<body>
+			<form action="welcome.jsp">
+				<input type="text" name="uname"/>
+				<input type="submit" value="Go Submit">
+			</form>
+		</body>
+		</html>
+	
+	
+	welcome.jsp:
+	=================
+	<html>
+	<head>
+	</head>
+	<body>
+		<%
+			String name = request.getParameter("uname");
+			out.print("Welcome " + name);
+			
+			session.setAttribute("name", name);
+			<a href="second.jsp">Link to second page</a>
+		%>
+	</body>
+	</html>
+	
+	second.jsp:
+	=================
+	<html>
+	<head>
+	</head>
+	<body>
+		<%
+			String name = (String)session.getAttribute("name");
+			out.print("Hello " + name);
+		%>
+	</body>
+	</html>
+	
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+VII.			pageContext implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+	>>>	In JSP, pageContext is an implicit object is of type PageContext.
+	>>> The pageContext object can be used to get, set or remove attributes from one of the following scopes:
+		><	page.
+		><	request.
+		><	session.
+		><	application. 
+	>>>	In JSP, page scope is default scope.
+	
+Ex:
+	index.html:
+	==============
+		<html>
+		<body>
+			<form action="welcome.jsp">
+				<input type="text" name="uname"/>
+				<input type="submit" value="Go Submit">
+			</form>
+		</body>
+		</html>
+	
+	
+	welcome.jsp:
+	=================
+	<html>
+	<head>
+	</head>
+	<body>
+		<%
+			String name = request.getParameter("uname");
+			out.print("Welcome " + name);
+			
+			pageContext.setAttribute("name", name, PageContext.SESSION_SCOPE);
+			<a href="second.jsp">Link to second page</a>
+		%>
+	</body>
+	</html>
+	
+	second.jsp:
+	=================
+	<html>
+	<head>
+	</head>
+	<body>
+		<%
+			String name = (String)pageContext.getAttribute("name", name, PageContext.SESSION_SCOPE);
+			out.print("Hello " + name);
+		%>
+	</body>
+	</html>
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+VIII.			page implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+	>>>	In JSP, page is an implicit object of type Object class.
+	>>>	This object is assigned to the reference of auto generated servtlet class.
+	>>>	It is written as:
+		Object page = this;
+	
+	
+	To use this object, we have to cast it to Servlet type.
+	<% (HttpServlet)page.log("My Message"); %>
+	
+	As it is of type Object it is less used, because we can use this object directly.
+	
+	<% this.log("My Message"); %>
+	
+	
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+IX.				exception implicit object:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+	
+	>>>	In JSP, exception is an implicit object of type java.lang.Throwable class.
+	>>>	This can be used to print exception. But it can be used in error pages.
+	
+	
+Ex:
+	error.jsp:
+	=================
+	<%@	page isErrorPage="true" %>
+	<html>
+	<head>
+	</head>
+	<body>
+		Sorry following exception occurred : <%= exception %>
+	</body>
+	</html>
+	
+	>>>	The exception is normally an object that is thrown at runtime.
+	>>>	Exception handling is the process of handle the runtime errors.
+	>>>	There may occur exception at any point of time in our web application.
+	
+	
+	
+	
+	>>> There are two ways to handle exceptions:
+		>< By errorPage and isErrorPage attributes of page directive.
+		>< By <error-page> element in web.xml file.
+	
+		
+		
+		>< Example for "By errorPage and isErrorPage attributes of page directive" approach:
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		
+		input.jsp:  ==> file to collect inputs
+		=================
+		<html>
+		<head>
+		</head>
+		<body>
+			<form action="Calculate.jsp">
+				No1 : <input type="text" name="NO1"/><br>
+				No2 : <input type="text" name="NO2"/><br>
+				<input type="submit" value="Divide"/>
+			</form>
+		</body>
+		</html>
+		
+		Calculate.jsp:
+		=================
+		<%@	page errorPage="error.jsp" %>
+		<html>
+		<head>
+		</head>
+		<body>
+			<%
+				String num1 = request.getParameter("NO1");
+				String num2 = request.getParameter("NO2");
+				
+				Integer i1 = Integer.parseInt(num1);
+				Integer i2 = Integer.parseInt(num2);
+				int c = a/b;
+				
+				out.println("Division result is " + c);
+			%>
+		</body>
+		</html>
+		
+		error.jsp:
+		=================
+		<%@	page isErrorPage="true" %>
+		<html>
+		<head>
+		</head>
+		<body>
+			Sorry following exception occurred : <%= exception %>
+		</body>
+		</html>
+		
+	
+		>< Example for "By <error-page> element in web.xml file" approach:
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		>>>	This approach is better way to handle exception because we need not to mention errorPage attribute in each JSP page.
+		>>> Specifying the single entry in web.xml will handle the exception.
+		>>> In this case, we have to specify either error-code or exception-type with location element.
+		>>>	If we want to handle all exceptions, then we have to specify "java.lang.Exception" in the exception =-typr element.
+		
+		
+		web.xml:
+		=================
+		<web-app>
+			<error-page>
+				<exception-type>java.lang.Exception<exception-type>
+				<location>/error.jsp</location>
+			</error-page>
+		</web-app>
+		
+		(OR)
+		<web-app>
+			<error-page>
+				<exception-type>500<exception-type>
+				<location>/error.jsp</location>
+			</error-page>
+		</web-app>
+		
+		
+		input.jsp:  ==> file to collect inputs
+		=================
+		<html>
+		<head>
+		</head>
+		<body>
+			<form action="Calculate.jsp">
+				No1 : <input type="text" name="NO1"/><br>
+				No2 : <input type="text" name="NO2"/><br>
+				<input type="submit" value="Divide"/>
+			</form>
+		</body>
+		</html>
+		
+		Calculate.jsp:
+		=================
+		<html>
+		<head>
+		</head>
+		<body>
+			<%
+				String num1 = request.getParameter("NO1");
+				String num2 = request.getParameter("NO2");
+				
+				Integer i1 = Integer.parseInt(num1);
+				Integer i2 = Integer.parseInt(num2);
+				int c = a/b;
+				
+				out.println("Division result is " + c);
+			%>
+		</body>
+		</html>
+		
+		error.jsp:
+		=================
+		<html>
+		<head>
+		</head>
+		<body>
+			Sorry following exception occurred : <%= exception %>
+		</body>
+		</html>
+
+		
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+JSP directives
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+The jsp directives are messages that tell the web container how to translate JSP page into the corresponding Servlet.
+There are three type of derivatives:
+
+==>	page derivatives
+==>	include derivatives
+==>	taglib derivatives
+
++==========================================+
+|	Syntax of JSP Directive:               |
+|---------------------------------         |
+|	<%@ directive attribute="value" %>     |
++==========================================+
+
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+I.				JSP page directives:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+The page directive defines attributes that apply to an entire JSP page.
+
+Syntax:
+
++==========================================+
+|	Syntax of JSP Directive:               |
+|---------------------------------         |
+|	<%@ page attribute="value" %>          |
++==========================================+
+
+Attributes of JSP page directive:
+	=>	import
+	=>	contentType
+	=>	extends
+	=>	info
+	=>	buffer
+	=>	language
+	=>	isELIgnored
+	=>	isThreadSafe
+	=>	autoFlush
+	=>	session
+	=>	pageEncoding
+	=>	errorPage
+	=>	isErrorPage
+
+	
+	1> 	import
+	==============================
+	
+	1.)	The import attribute is used to import class, interface or all the members of a package.
+	2.)	It is similar to import keyword in java class or interface.
+	
+	Ex:
+		<html>
+		<body>
+			<%@ page import="java.util.Date" %>
+			Today is : <%= new Date() %>
+		</body>
+		</html>
+
+	2>	contentType
+	==============================
+	
+	1.)	The contentType attributes defines MIME (Multipurpose Internet Mail Extension) type of the HTTP response.
+	2.)	The default value is "text/html;charset=ISO-8859-1".
+	
+	Ex:
+		<html>
+		<body>
+			<%@ page contentType="application/msword" %>
+			Today is : <%= new java.util.Date() %>
+		</body>
+		</html>
+	
+	3>	extends 
+	==============================
+	
+	1.)	This attribute defines the parent class from which generated servlet class is derived. It's rarely used.
+	
+	4> info 
+	==============================
+	
+	1.) This attribute simply sets the information of the JSP page later fetched by using getServletInfo() method of Servlet Interface.
+	
+	Ex:
+		<html>
+		<body>
+			<%@ page info="This is JSP generated Servlet" %>
+			Today is : <%= new java.util.Date() %>
+		</body>
+		</html>
+		
+		Resulting Servlet code:
+		
+		public String getServletInfo() {
+			return "This is JSP generated Servlet";
+		}
+		
+	5> buffer 
+	==============================
+	
+	1.) The buffer attribute sets the buffer size in kilobytes to handle output generated by JSP page. It's 8KB by default.
+	
+	Ex:
+		<html>
+		<body>
+			<%@ page buffer="16kb" %>
+			Today is : <%= new java.util.Date() %>
+		</body>
+		</html>
+	
+	
+	6> language 
+	==============================
+	
+	1.) The language attribute specifies the scripting language in JSP pages. It's JAVA by default.
+	
+	7> isELIgnored
+	==============================
+	
+	This attribute helps disabling Expression Language. By default this flag is false. If we set it to true, Expression Language will be disabled.
+	
+	Ex:
+		<html>
+		<body>
+			<%@ page isELIgnored="true" %>
+			Today is : <%= new java.util.Date() %>
+		</body>
+		</html>
+	
+	
+	8> isThreadSafe
+	==============================
+	
+	1.)	Servlet and JSP are multithreaded. If we want to control this behavior of JSP page, this attribute can be used.
+	2.)	Default value is true. If we set it to false, web container will serialize the mulitple requests i.e., it will waits until JSP to respond to a request before passing to another request.
+	
+	Ex:
+		<html>
+		<body>
+			<%@ page isThreadSafe="false" %>
+			Today is : <%= new java.util.Date() %>
+		</body>
+		</html>
+	
+	Equivalent code in JAVA:
+	-----------------------------
+		public SinglePage_JSP extends HttpJspBase implements SingleThreadModel {
+			...
+		}
+		
+	9> errorPage
+	==============================
+	
+	The errorPage attribute is to define error page, if exeception occurs in the current page, it will redirect to the error page defined.
+	
+	Ex:
+		<html>
+		<body>
+			<%@ page errorPage="error.jsp" %>
+			<%= 100/0 %>
+		</body>
+		</html>
+		
+	
+	10> isErrorPage
+	==============================
+	
+	This attribute is used to declares current page as error page.
+	
+	Ex:
+		<html>
+		<body>
+			<%@ page isErrorPage="true" %>
+			See exception <%= exception %>
+		</body>
+		</html>
+
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+II.				JSP include directives:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+>>>	The include directive is used to include the contents of any resource whether it may be jsp file, html file or text file.
+>>>	The include directive includes the original content of the included resource at page translation time.
+
+
+Syntax:
+
++==========================================+
+|	Syntax of JSP Directive:               |
+|---------------------------------         |
+|	<%@ include file="resourcename" %>     |
++==========================================+
+
+Ex:
+	<html>
+	<body>
+		<%@ include file="Header.html" %>
+		Today's date is : <%= java.util.Calender.getInstance().getTime() %>
+	</body>
+	</html>
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+III.			JSP TAG Library directives:
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+JSP Action Tags
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+JSP Action Tag  | Description
+----------------+------------------------------------------------
+jsp:forward     | forwards requests and responses to another resources.
+jsp:include     | include another resources.
+jsp:useBean     | creates or locates Bean objects.
+jsp:setProperty | Set a property in bean object.
+jsp:getProperty | Get a property from bean object.
+jsp:plugin      | embeds another compenents such as applet.
+jsp:param       | sets the parameter value. It is used in forward and include mostly.
+jsp:fallback    | can be used to print the message if plugin is working. It is used in jsp:plugin.
+
+
+
+
+jsp:forward action tag
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+The jsp:forward action tag is used to forward the request to another resource it may be jsp, html or another resource.
+
+Syntax of jsp:forward action tag without parameter
+---------------------------------------------------------
++========================================================+
+|                                                        |
+| <jsp:forward page="relativeURL | <%= expression %>" /> |
++========================================================+
+
+Syntax of jsp:forward action tag with parameter
+
++=============================================================================+
+| <jsp:forward page="relativeURL | <%= expression %>">                        |
+| <jsp:param name="parametername" value="parametervalue | <%=expression%>" /> | 
+| </jsp:forward>                                                              |
++=============================================================================+
+
+
+Example of jsp:forward action tag without parameter
+========================================================================
+In this example, we are simply forwarding the request to the printdate.jsp file.
+
+	index.jsp
+	--------------
+		<html>
+		<body>  
+		<h2>this is index page</h2>  
+		  
+		<jsp:forward page="printdate.jsp" />  
+		</body>  
+		</html>  
+	printdate.jsp
+	--------------
+		<html>  
+			<body>  
+				<% out.print("Today is:"+java.util.Calendar.getInstance().getTime()); %>  
+			</body>  
+		</html>  
+
+Example of jsp:forward action tag with parameter
+=========================================================================
+In this example, we are forwarding the request to the printdate.jsp file with parameter and printdate.jsp file prints the parameter value with date and time.
+
+	index.jsp:
+	=====================
+		<html>  
+			<body>  
+				<h2>this is index page</h2>  
+			  
+				<jsp:forward page="printdate.jsp" >  
+					<jsp:param name="name" value="javatpoint.com" />  
+				</jsp:forward>
+			</body>  
+		</html>
+		
+	printdate.jsp:
+	====================
+	<html>  
+		<body>  
+			<% out.print("Today is:"+java.util.Calendar.getInstance().getTime()); %>  
+			<%= request.getParameter("name") %>  
+		</body>  
+	</html> 
+	
+	
+
+jsp:include action tag
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The jsp:include action tag is used to include the content of another resource it may be jsp, html or servlet.
+
+The jsp include action tag includes the resource at request time so it is better for dynamic pages because there might be changes in future.
+
+The jsp:include tag can be used to include static as well as dynamic pages.
+
+
+Advantage of jsp:include action tag
+-------------------------------------------
+Code reusability : We can use a page many times such as including header and footer pages in all pages. So it saves a lot of time.
+
+=========================================================================================
+Difference between jsp include directive and include action
+=========================================================================================
+JSP include directive	                |	JSP include action
+========================================+================================================
+includes resource at translation time.	|	includes resource at request time.
+========================================+================================================
+better for static pages.				|	better for dynamic pages.
+========================================+================================================
+includes the original content in the    |	calls the include method.
+generated servlet.                      |
+========================================+================================================
+
+
+Syntax of jsp:include action tag without parameter:
+--------------------------------------------------------------
+
++==================================================================+
+|	<jsp:include page="relativeURL | <%= expression %>" />         |
++==================================================================+
+	
+Syntax of jsp:include action tag with parameter:
+--------------------------------------------------------------
+
++===================================================================================+
+|	<jsp:include page="relativeURL | <%= expression %>">                            |
+|	<jsp:param name="parametername" value="parametervalue | <%=expression%>" />     |
+|	</jsp:include>                                                                  |
++===================================================================================+
+ 
+Example of jsp:include action tag without parameter
+--------------------------------------------------------------------------------
+In this example, index.jsp file includes the content of the printdate.jsp file.
+
+File: index.jsp
+============================
+	<h2>this is index page</h2>  
+  	<jsp:include page="printdate.jsp" />  
+  	<h2>end section of index page</h2>  
+
+File: printdate.jsp
+==============================
+	<% out.print("Today is:"+java.util.Calendar.getInstance().getTime()); %>
+	
+
+	
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Java Bean
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+A JAVA bean is a JAVA Class which follow below conventions:
+	1.	It should have a no-arg constructor.
+	2.	It should be Serializable.
+	3.	It should provide methods to get and set the values of properties, known as getter and setter methods. 

@@ -1,0 +1,276 @@
+
+	
+Java application ==> JDBC API ==> Database
+
+Using JDBC:
+	we can Store, Update, Retrieve, Delete data in database.
+	
+Java statements ==> JDBC (Convert Java statements to SQL understandable commands) ==> SQL
+
+
+
+JDBC Architecture
+ ___________________________________________________________
+|          				 		 			 			    |
+| Application Layer      	Database Layer				    |
+|          				 				   ______			|                
+|          				  	+--> Drivers  |  DB  |	Oracle  |
+|          				  	|<--Java Stmts|______|			|      
+|          				  	|		to SQL					|
+|          				  	|				______			| 
+| Java       -->JDBC ------->+------------>|  DB  |	PosGres |
+| Application<--     <------|<-------------|______|			| 
+|          				  	|								|
+|          				  	|				______			| 
+|          				  	+------------->|  DB  |	MySQl	|
+|          				  	|<-------------|______|			| 
+|          				  	|								|
+|          				  	|				______			| 
+|          				  	+------------->|  DB  |	SyBase	|
+|          				 	|<-------------|______|			| 
+|___________________________________________________________|
+                        
+
+Types of Drivers
+======================================
+
+JDBC Driver is a software component that enables java application to interact with the database. There are 4 types of JDBC drivers:
+	I.		JDBC-ODBC bridge driver
+	II.		Native-API driver (partially java driver)
+	III.	Network Protocol driver (fully java driver)
+	iV.		Thin driver (fully java driver)
+
+
+I) JDBC-ODBC bridge driver : 
+=====================================
+	The JDBC-ODBC bridge driver uses ODBC driver to connect to the database. The JDBC-ODBC bridge driver converts JDBC method calls into the ODBC function calls. This is now discouraged because of thin driver.
+
+
+  		 ___________________________________________________________________________
+ 		|	 _____________                                                          | 
+ 		|	|             |                                                         |
+ 		|	| JDBC API    |                                                         |
+ 		|	|_____________|                                                         |
+ 		|		A                                                                   |
+ 		|		|                                                                   |
+ 		|   ____|________	  __________________     _______       ___________      |
+ 		|  |             |   |                  |   |       |     |           |   	|	 __________
+ 		|  | JAVA        |-->| JDBC-ODBC bridge |-->| ODBC  |---->| Vendor    |-----+-->|          |
+ 		|  | APPLICATION |   |	driver          |   | Driver|     | Database  |   	|	| Database |
+ 		|  |_____________|   |__________________|   |_______|     | Library   |   	|	|__________|
+ 		|	                                                      |___________|	    |	
+ 		|___________________________________________________________________________|	
+									Client Machine
+		
+		
+	Note:	In Java 8, the JDBC-ODBC Bridge has been removed. Oracle does not support the JDBC-ODBC Bridge from Java 8. Oracle recommends that you use JDBC drivers provided by the vendor of your database instead of the JDBC-ODBC Bridge.
+
+	Advantages:
+		==>	easy to use.
+		==> can be easily connected to any database.
+	Disadvantages:
+		==>	Performance degraded because JDBC method call is converted into the ODBC function calls.
+		==> The ODBC driver needs to be installed on the client machine.
+		==> Useful for only standalone applications.
+	
+	What is required?
+		==> Java application.
+		==> Database application.
+		==> ODBC application.
+		
+	How to use?
+		==>	Create a datasource in ODBC application.
+		==> Configure same Datasource in Java Application.
+		
+		//load driver
+		Class.forName("sun.jdbc.odbc.JDBCODBCDriver")
+		//get connection
+		Connection conn = DriverManager.getConnection("jdbc:odbc:<created data source name>", "<user name>", "<password>")
+		//execute statements.
+		Statement st = con.createstatement();
+		int i = st.executeupdate("insert into students values(1,'abc','anc@gmail.com',5000)");
+		System.out.println(i)
+		
+		
+
+II.) Native-API driver : (Standalone and remote access)
+=====================================
+	The Native API driver uses the client-side libraries of the database. The driver converts JDBC method calls into native calls of the database API. It is not written entirely in java.
+
+	  __________________________________________________________________________
+	 |	 _____________                                                          | 
+	 |	|             |                                                         |
+	 |	| JDBC API    |                                                         |
+	 |	|_____________|                                                         |
+	 |		A                                                                   |
+	 |		|                                                                   |
+	 |   ___|_________	   __________________                   ___________     |
+	 |  |             |   |                  |                 |           |   	|	 __________
+	 |  | JAVA        |-->| Native API driver|---------------->| Vendor    |----+-->|          |
+	 |  | APPLICATION |   |	                 |                 | Database  |   	|	| Database |
+	 |  |_____________|   |__________________|                 | Library   |   	|	|__________|
+	 |	                                                       |___________|	|	
+	 |__________________________________________________________________________|	
+								Client Machine
+									
+									
+	Advantage:
+		==>	performance upgraded than JDBC-ODBC bridge driver.
+	Disadvantage:
+		==>	The Native driver needs to be installed on the each client machine.
+		==>	The Vendor client library needs to be installed on client machine.
+		
+		
+III.) Network Protocol driver : 
+=====================================
+
+	The Network Protocol driver uses middleware (application server) that converts JDBC calls directly or indirectly into the vendor-specific database protocol. It is fully written in java.
+
+	  _____________________________________________
+	 |	 _____________                             |                            | 
+	 |	|             |                            |                            |
+	 |	| JDBC API    |                            |                            |
+	 |	|_____________|                            |                            |
+	 |		A                                      |                            |
+	 |		|                                      |                            |
+	 |   ___|_________	   __________________      |            ___________     |
+	 |  |             |   |                  |     |           |           |   	|	 __________
+	 |  | JAVA        |-->| Network Protocol |-----+---------->|           |----+-->|          |
+	 |  | APPLICATION |   |	driver           |     |           | Middleware|   	|	| Database |
+	 |  |_____________|   |__________________|     |           |           |   	|	|__________|
+	 |	                                           |           |___________|	|	
+	 |_____________________________________________|                            |	
+					Client Machine                          Server side
+									
+
+	Advantage:
+		==>	No client side library is required because of application server that can perform many tasks like auditing, load balancing, logging etc.
+	Disadvantages:
+		==>	Network support is required on client machine.
+		==>	Requires database-specific coding to be done in the middle tier.
+		==>	Maintenance of Network Protocol driver becomes costly because it requires database-specific coding to be done in the middle tier.
+		
+		
+IV.) Thin driver :
+=====================================
+	The thin driver converts JDBC calls directly into the vendor-specific database protocol. That is why it is known as thin driver. It is fully written in Java language.
+	It uses RMI to call database specific functions.
+	  _____________________________________________  
+	 |	 _____________                             |  
+	 |	|             |                            | 
+	 |	| JDBC API    |                            | 
+	 |	|_____________|                            | 
+	 |		A                                      | 
+	 |		|                                      | 
+	 |   ___|_________	   __________________      | 
+	 |  |             |   |                  |     | 	 __________
+	 |  | JAVA        |-->| Thin driver      |-----+--->|          |
+	 |  | APPLICATION |   |	                 |     | 	| Database |
+	 |  |_____________|   |__________________|     | 	|__________|
+	 |	                                           | 	
+	 |_____________________________________________| 	
+					Client Machine                   
+									
+	
+	Advantage:
+		==>	Better performance than all other drivers.
+		==>	No software is required at client side or server side.
+	Disadvantage:
+		==>	Drivers depend on the Database.
+		
+		
+DriverManager (Class) :
+===========================================
+To register Driver 
+To get connection.
+
+Driver (Interface) :
+===========================================
+Every database vendor must need to implement this Driver interface.
+
+Connection (Interface) :
+===========================================
+Useful to get connection from Database.
+
+Statement (Interface) :
+===========================================
+Useful to pass SQL statements to Database.
+
+SQLException (Class):
+===========================================
+Useful to understand database level exceptions.
+
+==================================================================================================================================================================================================================================================================
+==================================================================================================================================================================================================================================================================
+==================================================================================================================================================================================================================================================================
+																			To connect to Database
+==================================================================================================================================================================================================================================================================
+==================================================================================================================================================================================================================================================================
+==================================================================================================================================================================================================================================================================
+
+Step 1:
+	load driver implementation into JVM.
+	
+	I.		class.forName("Driver Implementation class")
+	
+	II.		DriverManager.registerDriver(driverInstance);
+	
+	III.	Using System properties.
+			from command line interface.
+			java -D driver=DriverImplementationClass Name.
+			
+Step 2:
+	Get connection.
+	
+	I.		DriverManager.getConnection("url");
+	
+	II.		DriverManager.getConnection("url","username", "password");
+	
+	III.	DriverManager.getConnection("url", Properties.property);
+	
+Step 3:
+	Create statement.
+	
+	I.		using Statement.
+			Statement st = conn.createStatement(); 
+	II.		Using PreparedStatement.
+			PreparedStatement ps = conn.createPreparedStatement("SQL");
+	III.	Using Callable statement.
+			CallableStatements cs = conn.createCall();
+
+Step 4:
+	Execute SQL statements
+	
+	I.		Using Statement.
+			st.execute(DDL);
+			st.executeUpdate(DML);
+			st.executeQuery(DRL);
+			
+	II.		Using PreparedStatements
+			boolean b = pst.execute();					==> DDL
+			int noOfRecords = pst.executeUpdate();            ==> DML
+			ResultSet rs = pst.executeQuery();             ==> DRL
+			
+	III.	Using CallableStatements
+			We can execute Stored Procedures and Functions in database.
+			
+Step 5:
+	How to read data from DB.
+	
+	I.		We can iterate data which is coming from DB.
+	
+
+	
+Driver (Interface)
+|
+|
+|----- JdbcOdbcDriver (C) implemented by SUN
+|
+|----- OracleDriver (C) implemented by ORACLE
+|		(ojdbc.jar)
+|----- Driver (C) implemented by MYSQL
+		(mysql-connector.jar)
+		
+		
+DriverManager ==> Factory class
+
